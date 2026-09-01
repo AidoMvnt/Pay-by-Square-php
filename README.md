@@ -19,10 +19,9 @@ that Slovak banks expect, and renders it as a scannable QR Code (SVG).
   (``xz --format=raw --lzma1=lc=3,lp=0,pb=2,dict=128KiB``), wraps in the 4-byte
   header, and encodes to **Base32Hex**. Output is byte-compatible with the
   official `bysquare` bank decoder (verified by decode round-trip).
-- **OS independent** — pure PHP 8, no GDI/system calls, no Composer packages.
-  The only external dependency is an `xz` binary with LZMA1 support (standard
-  on virtually every modern Linux/macOS distro; on stock PHP-FPM shared
-  hosting it is almost always available).
+- **OS independent** — pure PHP 8, no GDI, no Composer packages. The only
+  external dependency is an `xz` binary with LZMA1 support (standard on
+  virtually every modern Linux/macOS distro).
 - **Self-contained** — no `composer.json`, no autoloader. All classes live
   under the single `Pbs` namespace and load with plain `require`.
 - **Tests** — `tests/run-tests.php` covers QR (matrix + ECC + penalty +
@@ -107,6 +106,28 @@ implementation for the Pay by Square wire format and BIC dictionary, and a
 working PHP 8 installation with `xz` as the LZMA1 encoder. Golden test
 vectors and decode round-trips (via the real `bysquare` npm decoder) were
 used to verify byte-compatibility. No proprietary payment data has been baked in.
+
+## Troubleshooting
+
+### Host error: `LZMA1 (xz) failed (exit -1)` / `proc_open returned null`
+The wrapper spawns `xz` via `proc_open()` (not `exec()`/`shell_exec()` —
+those are usually in the hosted `disable_functions` list). If `proc_open`
+itself is blocked, the library cannot run **on that host** — ask your host
+for an unmanaged plan or move to a VPS. The same call works on a plain
+Linux box, which is the reference environment.
+
+Verify the environment with:
+
+    $ xz --version                # expect: xz (xz-utils) 5.x
+    $ xz --format=raw --lzma1=lc=3,lp=0,pb=2,dict=128KiB -c - < /dev/null > /dev/null \
+      && echo OK || echo MISSING
+    $ php -r 'echo in_array("proc_open", array_filter(explode(",", ini_get("disable_functions") ?: "")), "blocked") ?: "ok", PHP_EOL;'
+
+### Output does not decode in a bank app
+Regenerate with a valid 24-digit IBAN, 1–16-digit numeric variable symbol,
+and a numeric amount. The `examples/` scripts are known-good inputs;
+`tests/run-tests.php` performs a decode round-trip through the real
+`bysquare` bank decoder.
 
 ## License
 
