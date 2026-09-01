@@ -1,0 +1,26 @@
+{
+  "selfRoundtripAllOk": true,
+  "vectors": [
+    {
+      "id": "P0",
+      "inLen": 25,
+      "encHex": "5d00002000190000000000000000341949ee8de917893a335ffd7c76b951c83ce4710d1b82d9d71c31bc227ffad2a000",
+      "props": "5d",
+      "roundtripOk": true
+    },
+    {
+      "id": "P1",
+      "inLen": 80,
+      "encHex": "5d00002000500000000000000000058cec01e325a53a0d2fed17829d00784a927a6870c28e1912bd112bf0272c0f35be44170689f2da692a3591f6366eb4dc2bcde296282f33bb7d493e91ad03d5212d10192663eef3c99e381d4d86e4ea9008f36515da08fffe327000",
+      "props": "5d",
+      "roundtripOk": true
+    },
+    {
+      "id": "P2",
+      "inLen": 109,
+      "encHex": "5d000020006d00000000000000001802427c4d849a0c8d5337e8b046f4ba7c5706f373469ac753f0ece4457f61c784e1f56e0a35e06cc3137558614647c05db210a76f19f7ae513bdf60fc1b450708279e8d41f2158a90bc1d8f81b4e0bd7bfcb50fee3d12e80bd4c01987440797ce68859c977ffb96da80",
+      "props": "5d",
+      "roundtripOk": true
+    }
+  ]
+}
