@@ -164,7 +164,9 @@ $qr6  = QrCode::encode($qrs['minimal'], 3, QrCode::MASK_AUTO, true);
 $dark = 0;
 foreach ($qr6['modules'] as $row) { foreach ($row as $c) { if ($c === true) { $dark++; } } }
 $svg6 = Render::toSvg($qr6['modules'], $qr6['size'], ['size' => $qr6['size']]);
-ok(substr_count($svg6, "M") . "" === (string)$dark, "SVG dark-module path cmd count ($dark) == dark modules");
+$cmd = preg_match_all('/M[0-9]+ [0-9]+h[0-9]+v[0-9]+h-[0-9]+z/', $svg6);
+ok($cmd === $dark, "SVG dark-module path cmd count ($cmd) == dark modules ($dark)");
+ok(str_contains($svg6, 'data:image/svg+xml'), "icon asset embedded (data URI)");
 ok(str_contains($svg6, 'PAY') && str_contains($svg6, 'by square'), "SVG caption 'PAY' + 'by square' present");
 ok(str_contains($svg6, '<svg') && str_contains($svg6, '</svg>'), "SVG is a well-formed document");
 

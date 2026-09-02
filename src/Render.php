@@ -101,22 +101,44 @@ final class Render
         // icon sits right after the caption text (as in the reference design)
         $iconX = $xBy + (int)(strlen($capBy) * $fontPx * 0.5) + (int)($fontPx * 0.35);
 
-        // icon (rounded square + 3 strokes)
+        // icon — real brand asset (assets/card.svg), embedded as a
+        // self-contained data URI; falls back to a generic card glyph
         if ($showIcon && $iconW > 0) {
             $iy = $capY + max(2, (int)round(($capRowH - $iconH) / 2));
-            $s .= '<rect x="' . $iconX . '" y="' . $iy . '" width="' . $iconW . '" height="' . $iconH . '"'
-               . ' fill="' . self::ICON_FILL . '" rx="' . max(4, (int)round($iconH * 0.18)) . '"/>';
-            for ($k = 0; $k < 3; $k++) {
-                $lw  = (int)round($iconW * 0.62);
-                $ly  = $iy + (int)round($iconH * (0.28 + $k * 0.24));
-                $lh  = max(2, (int)round($iconH * 0.07));
-                $s .= '<rect x="' . ($iconX + (int)round($iconW * 0.16)) . '" y="' . $ly . '"'
-                   . ' width="' . $lw . '" height="' . $lh . '" fill="' . self::ICON_STROKE . '"/>';
-            }
+            $s .= self::icon($iconX, $iy, $iconW, $iconH);
         }
 
         $s .= '</svg>';
         return $s;
+    }
+
+    /**
+     * Caption icon: the real brand asset assets/card.svg (3 Bezier paths),
+     * embedded via a self-contained base64 data URI so the SVG stays
+     * portable. If the asset is missing, a generic card glyph is used.
+     */
+    private static function icon(int $x, int $y, int $iconW, int $iconH): string
+    {
+        $asset = __DIR__ . '/../assets/card.svg';
+        if (is_file($asset)) {
+            $raw = (string)file_get_contents($asset);
+            // strip the standalone XML declaration (browsers dislike it in <image>)
+            $raw = preg_replace('/^<\?xml[^?]*>\s*/', '', $raw);
+            $b64 = base64_encode($raw);
+            return '<image x="' . $x . '" y="' . $y . '" width="' . $iconW . '" height="' . $iconH . '"'
+                 . ' preserveAspectRatio="xMidYMid meet"'
+                 . ' xlink:href="data:image/svg+xml;base64,' . $b64 . '"'
+                 . ' href="data:image/svg+xml;base64,' . $b64 . '"/>';
+        }
+        // fallback: blue rounded square + 3 white strokes
+        return '<rect x="' . $x . '" y="' . $y . '" width="' . $iconW . '" height="' . $iconH . '"'
+             . ' fill="' . self::ICON_FILL . '" rx="' . max(4, (int)round($iconH * 0.18)) . '"/>'
+             . '<rect x="' . ($x + (int)round($iconW * 0.16)) . '" y="' . ($y + (int)round($iconH * 0.28)) . '"'
+             . ' width="' . (int)round($iconW * 0.62) . '" height="' . max(2, (int)round($iconH * 0.07)) . '" fill="' . self::ICON_STROKE . '"/>'
+             . '<rect x="' . ($x + (int)round($iconW * 0.16)) . '" y="' . ($y + (int)round($iconH * 0.52)) . '"'
+             . ' width="' . (int)round($iconW * 0.62) . '" height="' . max(2, (int)round($iconH * 0.07)) . '" fill="' . self::ICON_STROKE . '"/>'
+             . '<rect x="' . ($x + (int)round($iconW * 0.16)) . '" y="' . ($y + (int)round($iconH * 0.76)) . '"'
+             . ' width="' . (int)round($iconW * 0.45) . '" height="' . max(2, (int)round($iconH * 0.07)) . '" fill="' . self::ICON_STROKE . '"/>';
     }
 
     private static function svgText(int $x, int $midY, string $t, int $fontPx, string $fill, string $family, string $weight): string
