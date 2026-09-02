@@ -93,13 +93,17 @@ final class Render
         $capY = $frameSide + $gapTop;
         $capMidY = $capY + (int)($capRowH / 2);
         $textFamily = 'DejaVu Sans, Arial, Helvetica, sans-serif';
-        // PAY (accent color, bold)
-        $xPay = $padPx + 4;
+        // caption row — the whole "PAY  by square  [icon]" group is right-aligned
+        $iconX = $canvasW - $padPx - 4 - $iconW;          // icon at the group right edge
+        $g1Px  = (int)($fontPx * 0.40);                    // PAY -> by square
+        $g2Px  = (int)($fontPx * 0.35);                    // by square -> icon
+        // text widths estimated in the same metric the row used before
+        $wPay  = (int)(strlen($capPay) * $fontPx * 0.62);
+        $wBy   = (int)(strlen($capBy)  * $fontPx * 0.50);
+        $xBy   = $iconX - $g2Px - $wBy;
+        $xPay  = $xBy - $g1Px - $wPay;
         $s .= self::svgText($xPay, $capMidY, $capPay, $fontPx, self::ACCENT, $textFamily, '700');
-        $xBy  = $xPay + (int)(strlen($capPay) * $fontPx * 0.62) + (int)($fontPx * 0.35);
         $s .= self::svgText($xBy,  $capMidY, $capBy,  $fontPx, self::INK,   $textFamily, '400');
-        // icon right-aligned: right edge mirrors the left text offset (padPx + 4)
-        $iconX = $canvasW - $padPx - 4 - $iconW;
 
         // icon — real brand asset (assets/card.svg), embedded as a
         // self-contained data URI; falls back to a generic card glyph

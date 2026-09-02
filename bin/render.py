@@ -110,7 +110,7 @@ def main():
                 dr.rectangle([qx + x * sc, qy + y * sc, qx + x * sc + sc - 1, qy + y * sc + sc - 1],
                              fill=QR_DARK + (255,))
 
-    # caption row
+    # caption row — the whole "PAY  by square  [icon]" group is right-aligned
     capY  = frame + gapTop
     capCY = capY + capH // 2
     font   = ImageFont.truetype(a.font, fontpx)
@@ -118,14 +118,17 @@ def main():
     pay, by = "PAY", "by square"
     pw = dr.textlength(pay, font=bold)
     bw = dr.textlength(by,  font=font)
-    start = pad
-    dr.text((start, capCY), pay, font=bold, fill=ACCENT + (255,), anchor="lm")
-    bxx = start + pw + fontpx * 0.4
-    dr.text((bxx, capCY), by, font=font, fill=INK + (255,), anchor="lm")
+    g1 = fontpx * 0.40          # PAY -> by square
+    g2 = fontpx * 0.35          # by square -> icon
+    right = W - pad             # group right edge (mirrors the left text margin)
+    ix  = int(right - iconPx)
+    bx  = int(ix - g2 - bw)
+    px  = int(bx - g1 - pw)
+    dr.text((px, capCY), pay, font=bold, fill=ACCENT + (255,), anchor="lm")
+    dr.text((bx, capCY), by,  font=font, fill=INK + (255,), anchor="lm")
 
-    # brand icon (real asset, transparent alpha), right-aligned: right edge = W - pad (mirrors left text offset)
+    # brand icon (real asset, transparent alpha) at the group's right edge
     icon = load_icon(a.root, iconPx)
-    ix = int(W - pad - iconPx)
     iy = int(capY + (capH - iconPx) // 2)
     img.alpha_composite(icon, (ix, iy))
 
