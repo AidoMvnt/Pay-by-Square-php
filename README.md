@@ -56,7 +56,7 @@ php -r '
 
 `examples/` provides ready-to-run PHP scripts for a number of common
 variations (minimal payment, full payment, multiple accounts, specific-symbol
-only, SVG QR render, BIC lookup). Each of them is a single file — `php
+only, BIC lookup, decorated QR tile). Each of them is a single file — `php
 examples/<name>.php`.
 
 ## Requirements
@@ -66,6 +66,30 @@ examples/<name>.php`.
   Debian/Ubuntu/Fedora/SUSE; on stock shared hosting it is available. If the
   binary is missing, `Lzma1::compress()` throws a `RuntimeException` with a
   clear message.
+
+## Decorated QR tile
+
+The library renders the QR into a payment tile that matches the official
+Pay by Square look: a **white card with a light-blue frame** around a
+quiet-zone QR code, and below it the **"PAY by square"** caption with the
+small card icon.
+
+    $ php bin/qr.php                  # demo payment -> out/05-payment.{svg,png,json}
+    $ php examples/07-render-tile.php # same, via the examples entry point
+
+- `out/05-payment.svg` — **vector** tile (PHP only; `src/Render.php`), crisp at any size.
+- `out/05-payment.png` — **raster** tile at 10 px/module (via `bin/render.py`;
+  needs `python3` + Pillow + DejaVu fonts — available on standard Linux boxes).
+- `out/05-payment.json` — module matrix + meta (handy for custom renderers).
+
+Both files contain the **exactly decodable** code: `tests/run-tests.php`
+section 6 proves it by rendering the PNG and decoding it with an
+independent decoder (jsQR), expecting back the identical pbstring.
+`bin/qrdecode.cjs` is the standalone decoder helper (raw RGBA in -> text out).
+
+Custom look: `Render::toSvg($modules, $size, $opts)` accepts `moduleScale`,
+`borderPx`, `padPx`, `capFontPx`, `capPay`, `capBy`, `iconW`, `showIcon`,
+plus the palette constants on the class — all overridable per call.
 
 ## Project layout
 
@@ -78,8 +102,13 @@ src/
   Bics.php          Slovak bank-code → BIC dictionary
   PayBySquare.php   Payment model + wire format (build, CRC, LZMA, header, B32Hex)
 
+bin/
+  qr.php            CLI generator: payment -> out/{svg,png,json} (decorated tile)
+  render.py         PNG renderer (Pillow) — mirrors src/Render.php layout 1:1
+  qrdecode.cjs      QR decoder helper (jsQR): raw RGBA file -> decoded text
 examples/           Ready-to-run sample scripts (php examples/<name>.php)
 tests/              Self-test harness (php tests/run-tests.php)
+node_modules/       dev-only (jsQR) — used by the harness's decode self-check
 ```
 
 ## Sources / credit

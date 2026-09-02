@@ -1,0 +1,27 @@
+{
+  "name": "pay-by-square-php",
+  "version": "1.0.0",
+  "description": "> ⚠️ **Disclaimer:** This code is **AI-generated** and provided **without any > warranty whatsoever**. Use it **at your own risk** only — not intended for > real financial transactions without thorough verification.",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AidoMvnt/Pay-by-Square-php.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AidoMvnt/Pay-by-Square-php/issues"
+  },
+  "homepage": "https://github.com/AidoMvnt/Pay-by-Square-php#readme",
+  "dependencies": {
+    "jsqr": "^1.4.0"
+  }
+}
