@@ -86,8 +86,8 @@ def main():
     border  = max(2,  round(qrpx * 0.02))
     frame   = qrpx + 2 * pad + 2 * border
 
-    fontpx   = max(12, round(frame * 0.045))
-    iconPx   = max(24, round(frame * 0.13))
+    fontpx   = max(12, round(frame * 0.075))
+    iconPx   = max(24, round(frame * 0.15))
     gapTop   = max(12, round(frame * 0.06))
     capH     = max(iconPx, round(fontpx * 1.6))
     gapBot   = max(10, round(frame * 0.04))

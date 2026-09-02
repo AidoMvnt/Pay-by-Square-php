@@ -35,7 +35,7 @@ echo "pbstring : $qrs\n";
 echo "qr       : v{$qr["version"]} {$qr["size"]}x{$qr["size"]} mask {$qr["mask"]}\n";
 
 $svg = Render::toSvg($qr['modules'], $qr['size'], [
-    'moduleScale' => 5, 'borderPx' => 5, 'padPx' => 24, 'capFontPx' => 20,
+    'moduleScale' => 5, 'borderPx' => 5, 'padPx' => 24, 'capFontPx' => 34, 'iconW' => 56,
 ]);
 
 $outDir  = __DIR__ . '/../out';
