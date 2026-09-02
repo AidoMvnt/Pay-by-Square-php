@@ -28,8 +28,7 @@ use Pbs\QrCode;
 
 $ROOT = dirname(__DIR__);
 require $ROOT . '/src/QrCode.php';
-require $ROOT . '/src/PayBySquare.php';   // also pulls in Lzma1.php, Bics.php
-require $ROOT . '/src/Crc32.php';
+require $ROOT . '/src/PayBySquare.php';   // pulls in Lzma1.php, Bics.php, Crc32.php
 require $ROOT . '/src/Base32Hex.php';
 
 $pass = 0; $fail = 0; $skip = 0;
@@ -57,10 +56,10 @@ ok(Base32Hex::decode(Base32Hex::encode("\x03\x0a")) === "\x03\x0a", "round-trip 
 
 echo "== 3. LZMA1 (xz wrapper) ==\n";
 $sample = "a?č-ť-ľ špecialné znaky — bysquare payload sample";
-$body = Lzma1::compress($sample, 5);
+$body  = Lzma1::compress($sample);
 ok(strlen($body) > 0, "compress() non-empty (len=" . strlen($body) . ")");
-$body2 = Lzma1::compress($sample, 1);
-ok(strlen($body2) > 0, "compress(level=1) non-empty (len=" . strlen($body2) . ")");
+$body2 = Lzma1::compress(str_repeat("x", 512) . $sample);
+ok(strlen($body2) > 0, "compress(large input) non-empty (len=" . strlen($body2) . ")");
 
 echo "== 4. Pay-by-Square (4 profiles) ==\n";
 function pay(array $a): Payment {

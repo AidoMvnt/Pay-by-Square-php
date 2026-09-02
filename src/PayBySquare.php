@@ -4,6 +4,7 @@ namespace Pbs;
 
 require_once __DIR__ . '/Lzma1.php';
 require_once __DIR__ . '/Bics.php';
+require_once __DIR__ . '/Crc32.php';
 
 /**
  * Bank account (IBAN + optional BIC). If BIC is empty,
@@ -131,23 +132,17 @@ final class PayBySquare
         $tabbed = implode("\t", $f);
         $utf8   = $tabbed; // UTF-8 by definition in PHP
 
-        // 2) CRC32 (little-endian) prepended
-        $crc = self::crc32($utf8);
-        $payload = "\x00\x00\x00\x00" . $utf8;
-        // write 4 bytes LE
-        $payload[0] = chr($crc & 0xFF);
-        $payload[1] = chr(($crc >> 8) & 0xFF);
-        $payload[2] = chr(($crc >> 16) & 0xFF);
-        $payload[3] = chr(($crc >> 24) & 0xFF);
-        $plen = strlen($payload);
+        // 2) 4-byte LE CRC32 prepended (addChecksum) - the payload that goes
+        //    through xz is the CRC+data, exactly as bysquare's addChecksum builds it
+        $payload = Crc32::prepend($utf8);
+        $plen    = strlen($payload);
         if ($plen > self::MAX_RAW) {
             throw new \InvalidArgumentException('Payload too large for Pay by Square.');
         }
 
-        // 3) LZMA1 raw (lc=3, lp=0, pb=2, dict=128 KiB) via pure-PHP port
-        $body = Lzma1::compress($payload, 5);
-        if (strlen($body) < 13) {
-            throw new \RuntimeException("LZMA body too short: " . strlen($body));
+        $body = Lzma1::compress($payload);
+        if ($body === '' ) {
+            throw new \RuntimeException("LZMA body empty");
         }
 
         // 4) Header: 00 00 + u16-LE(payload length)  [C# ground truth]
@@ -202,10 +197,4 @@ final class PayBySquare
     }
 
     public static function lookUpBic(string $iban): ?string { return Bics::lookup($iban); }
-
-    private static function crc32(string $d): int
-    {
-        // PHP's native crc32 is fine; normalize to unsigned
-        return (int) crc32($d); // PHP returns a signed int; we need bit-cast
-    }
 }

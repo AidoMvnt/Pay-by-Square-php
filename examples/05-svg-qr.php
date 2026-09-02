@@ -23,7 +23,7 @@ $p->amount = '42.50';
 $p->currency = 'EUR';
 $p->dueDate = '20260930';
 $p->setVariableSymbol('2026090114');
-$p->setConstantSymbol('12345');
+$p->setConstantSymbol('123');
 $p->paymentNote = 'Faktura 14/2026';
 $p->payeeName = 'Mainvent s.r.o.';
 $p->payeeCity = 'Bratislava';
@@ -45,3 +45,7 @@ echo "wrote $outPath (" . strlen($svg) . " bytes, "
    . ", mask " . $qr['mask'] . ")\n";
 echo "scan it with any phone camera to confirm it decodes.\n";
 echo "OK\n";
+echo "<br><br>\n";
+echo "<div>";
+echo "$svg";
+echo "</div>";
