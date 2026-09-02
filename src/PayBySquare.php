@@ -140,7 +140,7 @@ final class PayBySquare
             throw new \InvalidArgumentException('Payload too large for Pay by Square.');
         }
 
-        $body = Lzma1::compress($payload);
+        $body = Lzma1Encoder::compressRaw($payload);
         if ($body === '' ) {
             throw new \RuntimeException("LZMA body empty");
         }

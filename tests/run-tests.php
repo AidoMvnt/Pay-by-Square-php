@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 use Pbs\Crc32;
 use Pbs\Base32Hex;
-use Pbs\Lzma1;
+use Pbs\Lzma1Encoder;
 use Pbs\Payment;
 use Pbs\PayBySquare;
 use Pbs\QrCode;
@@ -55,12 +55,32 @@ for ($i = 0; $i < 5; $i++) {
 }
 ok(Base32Hex::decode(Base32Hex::encode("\x03\x0a")) === "\x03\x0a", "round-trip binary bytes");
 
-echo "== 3. LZMA1 (xz wrapper) ==\n";
+echo "== 3. LZMA1 (native encoder) ==";
 $sample = "a?č-ť-ľ špecialné znaky — bysquare payload sample";
-$body  = Lzma1::compress($sample);
-ok(strlen($body) > 0, "compress() non-empty (len=" . strlen($body) . ")");
-$body2 = Lzma1::compress(str_repeat("x", 512) . $sample);
-ok(strlen($body2) > 0, "compress(large input) non-empty (len=" . strlen($body2) . ")");
+$raw1 = Lzma1Encoder::compressRaw($sample);
+ok(strlen($raw1) > 0, "compressRaw() non-empty (len=" . strlen($raw1) . ")");
+$raw2 = Lzma1Encoder::compressRaw(str_repeat("x", 512) . $sample);
+ok(strlen($raw2) > 0, "compressRaw(large input) non-empty (len=" . strlen($raw2) . ")");
+
+// Byte-for-byte parity check vs. the system `xz` (if present).
+$xzBin = trim((string)shell_exec('command -v xz 2>/dev/null'));
+if ($xzBin === '') {
+    skipped("xz parity (xz binary not present)");
+} else {
+    // xz raw of "$sample" with the same lc/lp/pb/dict params:
+    $tmp = tempnam(sys_get_temp_dir(), 'pbs-lzma');
+    file_put_contents($tmp, $sample);
+    $hexRef = trim((string)shell_exec('xz --format=raw --lzma1=lc=3,lp=0,pb=2,dict=128KiB -c ' .
+        escapeshellarg($tmp) . ' 2>/dev/null | od -An -v -tx1 | tr -d " \\n"'));
+    @unlink($tmp);
+    $hexPhp = bin2hex($raw1);
+    ok($hexPhp !== '' && $hexRef !== '', "both produced bytes (php=" . strlen($hexPhp) / 2 . "B, xz=" . (int)($hexRef ? strlen($hexRef) / 2 : 0) . "B)");
+    if ($hexPhp !== $hexRef) {
+        ok(false, "byte-for-byte parity with xz  (php=" . substr($hexPhp, 0, 40) . "... xz=" . substr($hexRef ?? '', 0, 40) . "...)");
+    } else {
+        ok(true, "byte-for-byte parity with xz (identical $hexPhp)");
+    }
+}
 
 echo "== 4. Pay-by-Square (4 profiles) ==\n";
 function pay(array $a): Payment {
