@@ -44,7 +44,7 @@ final class Render
         $capBy    = (string)($opts['capBy']  ?? 'by square');
         $iconW    = max(0, (int) ($opts['iconW']       ?? 56));
         $showIcon = (bool)  ($opts['showIcon'] ?? true);
-        $iconH    = (int)round($iconW * 0.78);
+        $iconH    = $iconW;                     // brand asset is square
 
         $qrPx      = $size * $scale;          // QR pixel edge
         $cardSide  = $qrPx + 2 * $padPx;       // white card
@@ -98,8 +98,8 @@ final class Render
         $s .= self::svgText($xPay, $capMidY, $capPay, $fontPx, self::ACCENT, $textFamily, '700');
         $xBy  = $xPay + (int)(strlen($capPay) * $fontPx * 0.62) + (int)($fontPx * 0.35);
         $s .= self::svgText($xBy,  $capMidY, $capBy,  $fontPx, self::INK,   $textFamily, '400');
-        // icon sits right after the caption text (as in the reference design)
-        $iconX = $xBy + (int)(strlen($capBy) * $fontPx * 0.5) + (int)($fontPx * 0.35);
+        // icon right-aligned: right edge mirrors the left text offset (padPx + 4)
+        $iconX = $canvasW - $padPx - 4 - $iconW;
 
         // icon — real brand asset (assets/card.svg), embedded as a
         // self-contained data URI; falls back to a generic card glyph

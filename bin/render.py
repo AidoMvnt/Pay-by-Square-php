@@ -123,9 +123,9 @@ def main():
     bxx = start + pw + fontpx * 0.4
     dr.text((bxx, capCY), by, font=font, fill=INK + (255,), anchor="lm")
 
-    # brand icon (real asset, transparent alpha) right after the caption
+    # brand icon (real asset, transparent alpha), right-aligned: right edge = W - pad (mirrors left text offset)
     icon = load_icon(a.root, iconPx)
-    ix = int(bxx + bw + fontpx * 0.35)
+    ix = int(W - pad - iconPx)
     iy = int(capY + (capH - iconPx) // 2)
     img.alpha_composite(icon, (ix, iy))
 
