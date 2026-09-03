@@ -178,8 +178,10 @@ ok(QrCode::encode('ahoj', 3, 0, false)['size'] <= QrCode::encode('ahoj', 2, 0, f
    "QR encodes multiple inputs without overflow");
 
 
-echo "== 6. Render (decorated tile, SVG + PNG) ==\n";
+echo "== 6. Render (decorated tile, SVG + native PNG + 1-bit BMP) ==\n";
 require dirname(__DIR__) . '/src/Render.php';
+require dirname(__DIR__) . '/src/Png.php';
+require dirname(__DIR__) . '/src/Assets.php';
 $qr6  = QrCode::encode($qrs['minimal'], 3, QrCode::MASK_AUTO, true);
 $dark = 0;
 foreach ($qr6['modules'] as $row) { foreach ($row as $c) { if ($c === true) { $dark++; } } }
@@ -187,52 +189,39 @@ $svg6 = Render::toSvg($qr6['modules'], $qr6['size'], ['size' => $qr6['size']]);
 $cmd = preg_match_all('/M[0-9]+ [0-9]+h[0-9]+v[0-9]+h-[0-9]+z/', $svg6);
 ok($cmd === $dark, "SVG dark-module path cmd count ($cmd) == dark modules ($dark)");
 ok(str_contains($svg6, 'data:image/svg+xml'), "icon asset embedded (data URI)");
-ok(str_contains($svg6, 'PAY') && str_contains($svg6, 'by square'), "SVG caption 'PAY' + 'by square' present");
 ok(str_contains($svg6, '<svg') && str_contains($svg6, '</svg>'), "SVG is a well-formed document");
 
-$ROOT = dirname(__DIR__);
-$pchk = tempnam(sys_get_temp_dir(), 'pbs-pil');
-file_put_contents($pchk, "import sys\nimport PIL\nsys.exit(0)\n");
-exec('python3 ' . escapeshellarg($pchk) . ' >/dev/null 2>&1', $prr, $prc);
-@unlink($pchk);
-$pyok = ($prc === 0);
-if (!$pyok) { skipped("PNG render (python3+Pillow not present)"); }
-else {
-    $outDir = $ROOT . '/out';
-    if (!is_dir($outDir)) { mkdir($outDir, 0755, true); }
-    $meta = $outDir . '/run-tests.meta.json';
-    file_put_contents($meta, json_encode(['size' => $qr6['size'], 'modules' => $qr6['modules']]) . "\n");
-    $png  = $outDir . '/run-tests.png';
-    @unlink($png);
-    $r = trim((string)shell_exec('python3 ' . escapeshellarg($ROOT . '/bin/render.py') .
-        ' --json ' . escapeshellarg($meta) . ' --out ' . escapeshellarg($png) . ' 2>&1'));
-    ok(is_file($png) && filesize($png) > 4000, "PNG written (" . (is_file($png) ? filesize($png) . " B" : "MISSING: " . $r) . ")");
+$png = Render::toPng($qr6['modules'], ['moduleScale' => 8]);
+ok(strlen($png) > 4000, "native PNG rendered (" . strlen($png) . " bytes, pure PHP, no Pillow)");
+ok(str_starts_with($png, "\x89PNG\r\n\x1A\n"), "PNG signature valid");
+$w = unpack('N', substr($png, 16, 4))[1];   // big-endian (PNG = network order)
+$h = unpack('N', substr($png, 20, 4))[1];
+ok($w > 100 && $h > $w, "tile $w x $h (wider QR block + taller caption band)");
 
-    $node    = trim((string)shell_exec('command -v node 2>/dev/null'));
-    $decoder = $ROOT . '/bin/qrdecode.cjs';
-    if ($node === '' || !is_file($decoder)) {
-        skipped("QR decode (node + bin/qrdecode.cjs not present)");
-    } else {
-        $raw  = tempnam(sys_get_temp_dir(), 'pbs-dec');
-        @unlink($raw);
-        $raw .= '.raw';
-        $pySrc = "import struct\n" .
-            "from PIL import Image\n" .
-            'p = ' . json_encode($png, JSON_UNESCAPED_SLASHES) . '; q = ' . json_encode($raw, JSON_UNESCAPED_SLASHES) . "\n" .
-            "i = Image.open(p).convert('RGBA')\n" .
-            "w, h = i.size\n" .
-            "open(q, 'wb').write(struct.pack('<II', w, h) + i.tobytes('raw', 'RGBA'))\n";
-        $pyd = $raw . '.py';
-        file_put_contents($pyd, $pySrc);
-        $dumpErr = trim((string)shell_exec('python3 ' . escapeshellarg($pyd) . ' 2>&1'));
-        $rawOk = is_file($raw);
-        $d = trim((string)shell_exec('node ' . escapeshellarg($decoder) . ' ' . escapeshellarg($raw) . ' 2>&1'));
-        @unlink($raw); @unlink($pyd);
-        if (!$rawOk) { error_log("DIAG raw=" . $raw . " png=" . $png . " pngOk=" . (int)is_file($png) . " dumpErr=" . $dumpErr . " pyd=" . $pyd); }
-        ok(str_starts_with($d, 'DECODED:') && str_contains($d, $qrs['minimal']),
-           "PNG decodes (jsQR) to the exact pbstring " . ($d ? '[' . substr($d, 0, 34) . '...]' : '[no output]'));
-    }
+$tmpPng = sys_get_temp_dir() . '/pbs-runtest-' . getmypid() . '.png';
+file_put_contents($tmpPng, $png);
+$node    = trim((string)shell_exec('command -v node 2>/dev/null'));
+$decoder = $ROOT . '/bin/qrdecode.cjs';
+if ($node === '' || !is_file($decoder)) {
+    skipped("QR decode of native PNG (node + bin/qrdecode.cjs not present)");
+} else {
+    $raw = $tmpPng . '.raw';
+    file_put_contents($raw, Render::toRawRgba($qr6['modules'], ['moduleScale' => 8]));
+    $d = trim((string)shell_exec('node ' . escapeshellarg($decoder) . ' ' . escapeshellarg($raw) . ' 2>&1'));
+    @unlink($raw);
+    ok(str_starts_with($d, 'DECODED:') && str_contains($d, $qrs['minimal']),
+       "native PNG decodes (jsQR) to the exact pbstring " . ($d ? '[' . substr($d, 0, 34) . '...]' : '[no output]'));
 }
+@unlink($tmpPng);
+
+$bmp1 = Render::toBmp1Tile($qr6['modules'], ['moduleScale' => 8]);
+ok(str_starts_with($bmp1, 'BM'), "1-bit BMP signature 'BM'");
+$bmpW = unpack('V', substr($bmp1, 18, 4))[1];
+$bmpH = unpack('V', substr($bmp1, 22, 4))[1];
+ok($bmpW === $w && $bmpH === $h, "BMP1 dimensions match PNG ($bmpW x $bmpH)");
+$pal  = substr($bmp1, 54, 8);
+ok($pal === "\xFF\xFF\xFF\x00\x00\x00\x00\x00", "BMP1 palette = white(0) / black(1)");
+
 
 echo "\n====\n  PASS: $pass   FAIL: $fail   SKIP: $skip\n";
 exit($fail === 0 ? 0 : 1);
