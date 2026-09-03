@@ -2,6 +2,7 @@
 namespace Pbs;
 /**
  * Lzma1Encoder — pure-PHP LZMA1 ("legacy .lzma / lzma_alone") compressor.
+ * AI-generated (written with Claude Code).
  *
  * Produces a standard 13-byte-header .lzma stream that decodes correctly
  * with `xz --format=lzma -d`, `lzma -d`, 7-Zip, Python's lzma module, etc.
