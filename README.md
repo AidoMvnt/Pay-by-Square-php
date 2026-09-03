@@ -138,11 +138,11 @@ node_modules/       dev-only (jsQR) — used by the harness's decode self-check
   (https://github.com/nayuki/QR-Code-generator, MIT License), originally from the
   C reference implementation, adapted to PHP.
 - **LZMA1 compression:** `src/Lzma1.php` — a self-contained pure-PHP LZMA1
-  range coder (hash-chain match finding, lc/lp/pb-configurable).
-  **AI-generated: written with Claude Code** (Anthropic's coding agent).
-  Follows the LZMA algorithm authored by Igor Pavlov (7‑Zip,
-  public-domain-style license); no binary or extension dependency. Verified to
-  decode byte-compatible with the official `bysquare` npm decoder.
+  range coder (hash-chain match finding, lc/lp/pb-configurable). AI-generated
+  with Claude Code, as part of a multi-agent project (see
+  "How it was generated"). Follows the LZMA algorithm authored by Igor Pavlov
+  (7‑Zip, public-domain-style license); no binary or extension dependency.
+  Verified to decode byte-compatible with the official `bysquare` npm decoder.
 - **Pay by Square wire format:** the field ordering, CRC32, LZMA1 parameters and
   Base32Hex layout follow the **bysquare.sk** official reference
   implementation; the BIC dictionary is derived from that same reference
@@ -150,13 +150,15 @@ node_modules/       dev-only (jsQR) — used by the harness's decode self-check
 
 ## How it was generated
 
-This implementation was **AI-generated: written with Claude Code**
-(Anthropic's coding agent) while assisting Martin. The agent drew on: the
-Nayuki QR reference, the `bysquare` (npm) reference implementation for the
-Pay by Square wire format and BIC dictionary, and a pure-PHP LZMA1 encoder.
-Golden test vectors and decode round-trips (via the real `bysquare` npm
-decoder) were used to verify byte-compatibility. No proprietary payment data
-has been baked in.
+This implementation is a collaborative, **AI-generated** project — written with
+**Claude Code** (Anthropic's coding agent), **Hermes Agent** (the orchestration
+assistant driving the session), **Qwen 3.8-128K** (used for coding work) and
+**Gemma 4-128K** (primary chat model), both of the latter two running locally
+on Ollama — while assisting Martin. The agents drew on: the Nayuki QR
+reference, the `bysquare` (npm) reference implementation for the Pay by Square
+wire format and BIC dictionary, and a pure-PHP LZMA1 encoder. Golden test
+vectors and decode round-trips (via the real `bysquare` npm decoder) were used
+to verify byte-compatibility. No proprietary payment data has been baked in.
 
 ## Troubleshooting
 
